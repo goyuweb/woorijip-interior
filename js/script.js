@@ -294,10 +294,38 @@ function initForm() {
       return;
     }
 
-    // 실제 서버 연동 없음 → 완료 처리
-    form.reset();
-    msg.textContent = '문의가 접수되었습니다. 확인 후 순차적으로 연락드리겠습니다.';
-    msg.className = 'cform__msg ok';
+    // Supabase에 문의 저장
+    const payload = {
+      name: document.getElementById('f-name').value.trim(),
+      phone: document.getElementById('f-phone').value.trim(),
+      email: document.getElementById('f-email').value.trim() || null,
+      space_type: document.getElementById('f-type').value || null,
+      region: document.getElementById('f-region').value.trim() || null,
+      size: document.getElementById('f-size').value.trim() || null,
+      budget: document.getElementById('f-budget').value.trim() || null,
+      message: document.getElementById('f-message').value.trim()
+    };
+    msg.textContent = '전송 중...';
+    msg.className = 'cform__msg';
+    fetch(window.SUPABASE_URL + '/rest/v1/inquiries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': window.SUPABASE_KEY,
+        'Authorization': 'Bearer ' + window.SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    }).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      form.reset();
+      msg.textContent = '문의가 접수되었습니다. 확인 후 순차적으로 연락드리겠습니다.';
+      msg.className = 'cform__msg ok';
+    }).catch(err => {
+      msg.textContent = '전송에 실패했습니다. 잠시 후 다시 시도해주세요.';
+      msg.className = 'cform__msg ng';
+      console.error(err);
+    });
   });
 }
 
